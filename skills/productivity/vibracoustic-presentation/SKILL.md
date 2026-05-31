@@ -299,6 +299,56 @@ gog drive upload /tmp/vibracoustic-brand/Dateiname.pptx \
 # Link aus dem Output posten
 ```
 
+## Workshop-Präsentation Pattern
+
+Für Workshoptage (Working Session, Strategie-Offsite, Workstream-Meetings) gibt es ein bewährtes Slide-Gerüst das Kai nutzt. Dieses Pattern wurde im Orga-2.0-Workshop (Juni 2026) etabliert.
+
+### Confirmed live colors (VC_v1 live ausgelesen, Mai 2026)
+| Rolle | HEX | Verwendung |
+|-------|-----|-----------|
+| `#024066` | DARK_BLUE | Header-Balken, Chapter-Panel links, Footer |
+| `#00BCF1` | LIGHT_BLUE | Akzent-Streifen, Card-Nummern, Trennlinien |
+| `#F26B43` | ORANGE | STATUS QUO Label, Alert-Karten |
+| `#008B95` | TEAL | DIRECTION Label, positive Karten |
+| `#5A6870` | GRAY | Sekundärtext, Beschreibungen |
+| `#F5F8FB` | LIGHT_GRAY | Card-Hintergründe |
+| `#7F1D1D` | DARK_RED | Problemtext (✕ Punkte) |
+| `#06422C` | DARK_GREEN | Lösungstext (→ Punkte) |
+
+### Workshop Slide-Typen
+
+**STATUS QUO / DIRECTION** (2-Spalten-Karte):
+- Links orange Header "STATUS QUO" + Problemliste mit `✕` in DARK_RED
+- Rechts teal Header "DIRECTION" + Lösungen mit `→` in DARK_GREEN
+- Beide Karten: LIGHT_GRAY Hintergrund, gleiche Höhe
+
+**Chapter Divider**:
+- Linkes Panel 8cm breit, DARK_BLUE
+- Große Kapitelnummer (72pt, LIGHT_BLUE)
+- Vertikaler LIGHT_BLUE Akzentstreifen rechts vom Panel
+- Titel (28pt, bold, DARK_BLUE) auf weißem Hintergrund
+
+**Discussion Cards**:
+- Nummerierte Karten mit LIGHT_BLUE Nummer-Box
+- Frage in bold DARK_BLUE, Hinweistext in GRAY
+
+**Typische Workshop-Gliederung:**
+1. Cover (linkes Panel DARK_BLUE, Titel rechts)
+2. Agenda (nummerierte Zeilen, abwechselnd LIGHT_GRAY / heller Blau)
+3. Chapter Divider → Context & Mandate
+4. Business-Kontext-Folien (Ursachen/Treiber)
+5. Chapter Divider → Was nicht funktioniert
+6. STATUS QUO / DIRECTION Folien (3 Themenblöcke) + Diskussionsrunden
+7. Chapter Divider → Greenfield Vision
+8. Prinzipien-Folie (6-Karten Grid) + Diskussionsrunde
+9. Accountability-Modell (Tabelle mit Schichten)
+10. Sacred Cows / Rules to Challenge + Diskussionsrunde
+11. Chapter Divider → Work Packages
+12. Work-Package-Tabelle (ausfüllbar)
+13. Open Questions für andere Workstreams
+14. Timeline (Meilenstein-Leiste)
+15. Closing (vollflächig DARK_BLUE)
+
 ## Standard-Präsentationsstruktur (VBC-Konvention)
 
 1. **Titelfolie** (`Title Page`) — Thema, Autor, Datum, Anlass
@@ -307,24 +357,53 @@ gog drive upload /tmp/vibracoustic-brand/Dateiname.pptx \
 4. **Content-Folien** — je nach Inhalt Layout wählen (s. oben)
 5. **Abschlussfolie** — Nächste Schritte oder Kontakt (`Contact`)
 
+Für komplexe Workshop-Decks: `references/workshop_orga20_jun2026.md`
+
 ## Common Pitfalls
 
-1. **Tahoma muss installiert sein** — auf macOS standardmäßig vorhanden; auf Linux ggf. `ttf-tahoma-replacement` installieren.
+1. **⛔ NIEMALS `Blank`-Layout verwenden** — immer nur die echten VC-Layouts aus dem Template (`Title Page`, `1 Content`, `Chapter Divider` etc.). Das Blank-Layout hat keinen Slide-Master-Hintergrund → Header-Balken, Cyan-Linie, Footer-Balken fehlen komplett. Dies ist der häufigste Fehler bei KI-generierten VBC-Decks.
 
-2. **Placeholder-Indizes sind layout-spezifisch** — nie blind `placeholders[0]` ohne Layout-Kenntnis verwenden. Immer `ph.placeholder_format.idx` prüfen.
+2. **⛔ NIEMALS freie TextBoxes oder Rectangles für Header/Footer bauen** — das komplette visuelle Rahmenwerk (blauer Header-Balken oben, Cyan-Trennlinie, Footer-Bereich unten) kommt automatisch vom Slide Master wenn man die richtigen Layouts nutzt. Eigene Shapes erzeugen ein falsches, inkonsistentes Layout.
 
-3. **Template-Slides müssen entfernt werden** — `Presentation(TEMPLATE)` enthält 7 Beispiel-Slides; alle löschen bevor neue hinzugefügt werden (s. Schritt 2).
+3. **⛔ NIEMALS Calibri verwenden** — python-pptx setzt Calibri als Default-Schrift wenn man TextBoxes manuell erstellt. Immer explizit `Tahoma` setzen oder besser: nur Template-Placeholders nutzen (die erben Tahoma automatisch vom Master). Prüfen: `run.font.name = "Tahoma"`.
 
-4. **Footer-Placeholders vergessen** — Datum und Fußzeile in jedem Slide befüllen, sonst bleiben Placeholder-Texte (`04/05/2026`, `|  Title of Presentation`) stehen.
+4. **Placeholder-Indizes sind layout-spezifisch** — nie blind `placeholders[0]` ohne Layout-Kenntnis verwenden. Immer `ph.placeholder_format.idx` prüfen.
 
-5. **`/tmp/vibracoustic-brand/` kann fehlen** — vor Verwendung prüfen; Drive-ID für Download: `1PDGluRzlUhiOIhWqfA7UCrU2oIqwGkwX`.
+5. **Template-Slides müssen entfernt werden** — `Presentation(TEMPLATE)` enthält 7 Beispiel-Slides; alle löschen bevor neue hinzugefügt werden (s. Schritt 2).
 
-6. **Topline (idx=18) immer befüllen** — gehört zum VBC-Standard, nie weglassen.
+6. **Footer-Placeholders immer befüllen** — Datum und Fußzeile in jedem Slide befüllen, sonst bleiben Placeholder-Texte (`04/05/2026`, `|  Title of Presentation`) stehen.
 
-7. **QA**: LibreOffice nicht auf diesem System → Datei in Drive hochladen und in Google Slides visuell prüfen, oder python-pptx-Thumbnails via Pillow generieren.
+7. **Topline (idx=18) immer befüllen** — gehört zum VBC-Standard, nie weglassen.
+
+8. **`/tmp/vibracoustic-brand/` kann fehlen** — vor Verwendung prüfen; Drive-ID für Download: `1PDGluRzlUhiOIhWqfA7UCrU2oIqwGkwX`.
+
+9. **QA — visuell prüfen**: LibreOffice nicht auf diesem System → Datei in Drive hochladen und in Google Slides visuell prüfen. Checkliste: Tahoma? Richtiger Header-Balken? Cyan-Linie? Footer mit Datum/Titel/Seitenzahl? Kein Calibri?
+
+10. **Schrift explizit setzen wenn TextFrames manuell befüllt werden:**
+    ```python
+    from pptx.util import Pt
+    tf = slide.placeholders[1].text_frame
+    tf.text = "Inhalt"
+    for para in tf.paragraphs:
+        for run in para.runs:
+            run.font.name = "Tahoma"
+            run.font.size = Pt(14)
+    ```
+
+8. **Bei Workshop-Präsentationen: frisch bauen statt Template-Slides kopieren** — für komplexe Workshop-Decks (Diskussionsrunden, Accountability-Tabellen, Kapitel-Divider mit Nummern) ist es sauberer, eine `NewPresentation()` zu erstellen und alle Shapes manuell zu platzieren. Das Template wird dann nur als Farb-/Font-Referenz genutzt.
+
+9. **python-pptx über pip3 installieren, nicht uv** — auf diesem System (macOS, python3.11 via CommandLineTools) klappt `pip3 install python-pptx openpyxl` zuverlässig. `uv pip install` liefert kein importierbares Modul für den System-python3.
+
+10. **Inline-`&` in `python3 -c` String blockiert** — Terminal blockiert wenn der Python-Code ein `&` Zeichen enthält (wird als Shell-Backgrounding interpretiert). Stattdessen Code in `/tmp/script.py` schreiben und mit `python3 /tmp/script.py` aufrufen.
+
+11. **`~/Documents/` via terminal `ls` kann >60s timeouten** (macOS Spotlight/Indexierung). Stattdessen: `file://` im Browser navigieren oder direkte absolute Pfade zu bekannten Unterordnern verwenden.
+
+12. **`gog drive download` lädt nach `~/Library/Application Support/gogcli/drive-downloads/` herunter** (nicht ins Arbeitsverzeichnis). Dateiname = `<fileId>_<originalName>`. Immer mit vollem Pfad referenzieren.
 
 ## Kontext-Erkennung
 
-**VBC-Design verwenden bei:** Vibracoustic / VBC / VC / SCM / Steering / Lenkungsausschuss / Freigabe / Management Update / Orga-Deck / Firma-Kontext
+**VBC-Design verwenden bei:** Vibracoustic / VBC / VC / SCM / Steering / Lenkungsausschuss / Freigabe / Management Update / Orga-Deck / Firma-Kontext / **Orga 2.0 / Workstream / Workshop**
 
 **Kein VBC-Design bei:** Northpeak/Paperclip-Präsentationen, private Decks (Schule, Familie), OpenClaw-Statusberichte
+
+**WICHTIG — Skill MUSS automatisch geladen werden:** Sobald Kai ein Slide-Deck in seinem Arbeitskontext anfordert, diesen Skill **vor** jeder anderen Aktion laden. Nicht erst nach dem Lesen der Drive-Dateien beginnen — Brand-Farben und Layout-Patterns sind hier vollständig dokumentiert.
