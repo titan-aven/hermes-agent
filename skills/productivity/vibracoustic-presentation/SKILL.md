@@ -361,9 +361,11 @@ Für komplexe Workshop-Decks: `references/workshop_orga20_jun2026.md`
 
 ## Common Pitfalls
 
-1. **⛔ NIEMALS `Blank`-Layout verwenden** — immer nur die echten VC-Layouts aus dem Template (`Title Page`, `1 Content`, `Chapter Divider` etc.). Das Blank-Layout hat keinen Slide-Master-Hintergrund → Header-Balken, Cyan-Linie, Footer-Balken fehlen komplett. Dies ist der häufigste Fehler bei KI-generierten VBC-Decks.
+1. **⛔ NIEMALS `Blank`- oder `Only Title`-Layout als Basis für Inhaltsfolien verwenden** — beide Layouts liefern keinen Content-Placeholder. Wer sie trotzdem nutzt, baut zwangsläufig freie Shapes — was sofort zu falschem Layout führt. `Only Title` ist ausschließlich für Custom-Visualisierungen reserviert die wirklich kein Raster brauchen (z.B. Organigramm-SVG). Im Zweifel: `1 Content` nehmen.
 
-2. **⛔ NIEMALS freie TextBoxes oder Rectangles für Header/Footer bauen** — das komplette visuelle Rahmenwerk (blauer Header-Balken oben, Cyan-Trennlinie, Footer-Bereich unten) kommt automatisch vom Slide Master wenn man die richtigen Layouts nutzt. Eigene Shapes erzeugen ein falsches, inkonsistentes Layout.
+2. **⛔ NIEMALS freie TextBoxes, Rectangles oder Shapes für Inhalte, Header oder Footer bauen** — das komplette visuelle Rahmenwerk (blauer Header-Balken oben, Cyan-Trennlinie, Footer-Bereich unten) kommt automatisch vom Slide Master. Sobald mehr als 2–3 freie Shapes pro Slide entstehen, ist das ein Warnsignal: falsches Layout gewählt. Stopp — Layout wechseln statt weiterbauen.
+
+2a. **✅ Selbstcheck vor dem Speichern:** Zähle freie Shapes pro Slide (`[s for s in slide.shapes if s.shape_type != 14]`). Mehr als 2 freie Shapes = Layout-Fehler. Sofort korrigieren.
 
 3. **⛔ NIEMALS Calibri verwenden** — python-pptx setzt Calibri als Default-Schrift wenn man TextBoxes manuell erstellt. Immer explizit `Tahoma` setzen oder besser: nur Template-Placeholders nutzen (die erben Tahoma automatisch vom Master). Prüfen: `run.font.name = "Tahoma"`.
 
