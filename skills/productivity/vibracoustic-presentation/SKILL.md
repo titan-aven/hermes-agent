@@ -204,97 +204,54 @@ Großer Content-Bereich oben (idx=41), zwei Details unten (idx=39, 40).
 
 ## Workflow: Präsentation erstellen
 
-### Schritt 1: Abhängigkeiten + Template
-```bash
-# python-pptx installieren (falls nötig)
-uv run --with python-pptx python3 your_script.py
+### ⚠️ WICHTIGSTE REGEL: Script verwenden, keinen Code generieren!
 
-# Template lokal verfügbar?
-ls /tmp/vibracoustic-brand/VC_Brand_Kit.pptx || \
-  gog drive download 1PDGluRzlUhiOIhWqfA7UCrU2oIqwGkwX \
-  --account aven73.claw@gmail.com \
-  --output /tmp/vibracoustic-brand/VC_Brand_Kit.pptx
-```
+**Das validierte Script `scripts/create_vbc_presentation.py` ist die einzige erlaubte Methode.**
+Niemals python-pptx-Code neu generieren — das ist die Quelle aller bisherigen Fehler.
 
-### Schritt 2: Python-Skript Grundgerüst
+### Schritt 1: Script laden und parametrieren
+
 ```python
-from pptx import Presentation
-from pptx.util import Pt
-from pptx.dml.color import RGBColor
-from datetime import date
+# Script befindet sich in:
+# ~/.hermes/skills/productivity/vibracoustic-presentation/scripts/create_vbc_presentation.py
 
-TEMPLATE = "/tmp/vibracoustic-brand/VC_Brand_Kit.pptx"
-prs = Presentation(TEMPLATE)
+# 1. META anpassen:
+META = {
+    "titel":     "Meine Vibracoustic Präsentation",
+    "topline":   "Bereich | Thema | Datum",
+    "untertitel": "Kai Voges  |  01.06.2026",
+    "datum":     "06/01/2026",
+}
 
-# Alle Slides aus Template entfernen (frisch starten)
-xml_slides = prs.slides._sldIdLst
-for slide in list(prs.slides):
-    rId = prs.slides._sldIdLst[0].get('r:id')
-    prs.part.drop_rel(rId)
-    del prs.slides._sldIdLst[0]
+# 2. SLIDES befüllen — nur diese Layouts erlaubt:
+#    "Title Page", "1 Content", "2 Contents", "2 Contents with Headlinebox",
+#    "4 Contents with Headlinebox", "6 Contents with Headlinebox", "Chapter Divider"
 
-# Layout-Map erstellen
-layouts = {l.name: l for master in prs.slide_masters for l in master.slide_layouts}
-
-DATUM = date.today().strftime("%d/%m/%Y")
-TITEL = "Meine Präsentation"
-
-def set_footer(slide, titel=TITEL, datum=DATUM):
-    """Datum, Fußzeile, Seitenzahl setzen."""
-    for ph in slide.placeholders:
-        try:
-            pt = ph.placeholder_format.type.name
-            if pt == 'DATE':
-                ph.text = datum
-            elif pt == 'FOOTER':
-                ph.text = f"|  {titel}"
-        except Exception:
-            pass
+SLIDES = [
+    {"layout": "Title Page", "titel": "...", "untertitel": "..."},
+    {"layout": "1 Content",  "topline": "...", "titel": "...", "content": "..."},
+    # usw. — siehe Script für alle Felder
+]
 ```
 
-### Schritt 3: Titelfolie
-```python
-slide = prs.slides.add_slide(layouts["Title Page"])
-slide.placeholders[0].text = TITEL
-slide.placeholders[1].text = f"Kai Voges  |  {date.today().strftime('%d.%m.%Y')}"
-```
-
-### Schritt 4: Inhaltsfolien
-```python
-# Standard-Folie (1 Content)
-slide = prs.slides.add_slide(layouts["1 Content"])
-slide.placeholders[18].text = "Projektbereich"   # Topline
-slide.placeholders[0].text = "Folien-Überschrift"
-tf = slide.placeholders[1].text_frame
-tf.text = "Erster Punkt"
-p = tf.add_paragraph(); p.text = "Detail"; p.level = 1
-set_footer(slide)
-
-# 2×2 Raster (4 Contents with Headlinebox)
-slide = prs.slides.add_slide(layouts["4 Contents with Headlinebox"])
-slide.placeholders[18].text = "Kategorien"
-slide.placeholders[0].text = "Übersicht"
-slide.placeholders[41].text = "Kategorie A"
-slide.placeholders[37].text_frame.text = "Inhalt A"
-slide.placeholders[28].text = "Kategorie B"
-slide.placeholders[38].text_frame.text = "Inhalt B"
-slide.placeholders[43].text = "Kategorie C"
-slide.placeholders[39].text_frame.text = "Inhalt C"
-slide.placeholders[42].text = "Kategorie D"
-slide.placeholders[40].text_frame.text = "Inhalt D"
-set_footer(slide)
-```
-
-### Schritt 5: Speichern + Upload
-```python
-output = f"/tmp/vibracoustic-brand/{TITEL.replace(' ', '_')}.pptx"
-prs.save(output)
-print(f"Gespeichert: {output}")
-```
+### Schritt 2: Ausführen
 
 ```bash
-# In Drive hochladen
-gog drive upload /tmp/vibracoustic-brand/Dateiname.pptx \
+uv run --with python-pptx python3 \
+  ~/.hermes/skills/productivity/vibracoustic-presentation/scripts/create_vbc_presentation.py
+```
+
+Der eingebaute Validator prüft **automatisch** vor dem Speichern:
+- Kein Blank / Only Title Layout
+- Keine freien Shapes (> 2 pro Slide)
+- Keine Nicht-Tahoma-Schriften
+
+Schlägt die Validierung an → Datei wird **nicht** gespeichert, Fehler werden ausgegeben.
+
+### Schritt 3: In Drive hochladen
+
+```bash
+gog drive upload /tmp/vibracoustic-brand/output.pptx \
   --account aven73.claw@gmail.com
 # Link aus dem Output posten
 ```
@@ -381,15 +338,19 @@ Für komplexe Workshop-Decks: `references/workshop_orga20_jun2026.md`
 
 9. **QA — visuell prüfen**: LibreOffice nicht auf diesem System → Datei in Drive hochladen und in Google Slides visuell prüfen. Checkliste: Tahoma? Richtiger Header-Balken? Cyan-Linie? Footer mit Datum/Titel/Seitenzahl? Kein Calibri?
 
-10. **Schrift explizit setzen wenn TextFrames manuell befüllt werden:**
+10. **Überlagerungen vermeiden — Textmenge begrenzen:**
+    - `1 Content` Placeholder fasst max. ~400 Zeichen komfortabel (31.6×12.6cm)
+    - `4 Contents` Zellen: max. ~150 Zeichen pro Zelle (15.4×4.6cm)
+    - `6 Contents` Zellen: max. ~100 Zeichen pro Zelle (10×4.6cm)
+    - Bei mehr Text: auf mehrere Slides aufteilen oder kleineren Schriftgrad setzen (`Pt(11)`)
+    - Niemals Text erzwingen der nicht in den Placeholder passt — lieber kürzen
+
+11. **Schrift explizit setzen wenn nötig:**
     ```python
-    from pptx.util import Pt
-    tf = slide.placeholders[1].text_frame
-    tf.text = "Inhalt"
-    for para in tf.paragraphs:
+    for para in placeholder.text_frame.paragraphs:
         for run in para.runs:
             run.font.name = "Tahoma"
-            run.font.size = Pt(14)
+            run.font.size = Pt(12)
     ```
 
 8. **Bei Workshop-Präsentationen: frisch bauen statt Template-Slides kopieren** — für komplexe Workshop-Decks (Diskussionsrunden, Accountability-Tabellen, Kapitel-Divider mit Nummern) ist es sauberer, eine `NewPresentation()` zu erstellen und alle Shapes manuell zu platzieren. Das Template wird dann nur als Farb-/Font-Referenz genutzt.
