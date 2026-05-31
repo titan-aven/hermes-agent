@@ -3197,7 +3197,7 @@ def run_setup_wizard(args):
             config = load_config()
 
         setup_mode = prompt_choice("How would you like to set up Hermes?", [
-            "Quick setup — provider, model & messaging (recommended)",
+            "Quick Setup (Nous Portal) — OAuth login, model & messaging (recommended)",
             "Full setup — configure everything",
         ], 0)
 
@@ -3250,13 +3250,43 @@ def run_setup_wizard(args):
 
 
 def _run_first_time_quick_setup(config: dict, hermes_home, is_existing: bool):
-    """Streamlined first-time setup: provider, model, terminal & messaging.
+    """Streamlined first-time setup via Nous Portal: OAuth, model, terminal & messaging.
 
-    Applies sensible defaults for TTS (Edge), agent settings, and tools —
-    the user can customize later via ``hermes setup <section>``.
+    Routes straight to the Nous Portal provider — runs the device-code OAuth
+    login, picks a Nous model, then configures the terminal backend and (optionally)
+    a messaging platform. Applies sensible defaults for everything else (agent
+    settings, tools); the user can customize later via ``hermes setup <section>``
+    or switch providers with ``hermes model``.
     """
-    # Step 1: Model & Provider (essential — skips rotation/vision/TTS)
-    setup_model_provider(config, quick=True)
+    from hermes_cli.config import load_config
+
+    # Step 1: Nous Portal — OAuth login + model selection.
+    # _model_flow_nous() handles both the logged-out path (device-code OAuth,
+    # which selects a model internally) and the already-logged-in path (curated
+    # Nous model picker). Provider is set to "nous" by the login/model save.
+    print()
+    print_header("Nous Portal")
+    print_info("One subscription, 300+ models, plus the Tool Gateway:")
+    print_info("  web search, image generation, TTS, browser automation.")
+    print_info("Sign up: https://portal.nousresearch.com/manage-subscription")
+    print()
+    try:
+        from hermes_cli.main import _model_flow_nous
+        _model_flow_nous(config)
+    except (KeyboardInterrupt, EOFError):
+        print()
+        print_info("Nous Portal setup cancelled.")
+    except Exception as exc:
+        logger.debug("_model_flow_nous error during quick setup: %s", exc)
+        print_warning(f"Nous Portal setup encountered an error: {exc}")
+        print_info("You can try again later with: hermes model")
+
+    # Re-sync the wizard's config dict from disk — _model_flow_nous (and the
+    # underlying login/model save) write via their own load/save cycle, and the
+    # wizard's later save_config(config) must not clobber those values (#4172).
+    _refreshed = load_config()
+    config.clear()
+    config.update(_refreshed)
 
     # Step 2: Terminal Backend — where commands run is a core decision
     setup_terminal_backend(config)
