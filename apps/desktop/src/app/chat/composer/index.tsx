@@ -331,6 +331,21 @@ export function ChatBar({
 
     draftRef.current = nextDraft
     aui.composer().setText(nextDraft)
+
+    // Push the new text into the contentEditable editor directly. Setting the
+    // assistant-ui composer state alone is not enough: the draft→editor sync
+    // effect only re-renders the editor when it is NOT focused
+    // (document.activeElement !== editor), and the dictation/insert paths
+    // typically run while the editor has (or immediately regains) focus — so
+    // the store would hold the text but the visible editor would stay empty
+    // and there'd be nothing to send. Mirror appendExternalText here.
+    const editor = editorRef.current
+
+    if (editor) {
+      renderComposerContents(editor, nextDraft)
+      placeCaretEnd(editor)
+    }
+
     requestMainFocus()
   }
 

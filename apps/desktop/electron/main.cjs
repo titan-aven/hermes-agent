@@ -2611,15 +2611,54 @@ function installContextMenu(window) {
   })
 }
 
-function installMediaPermissions() {
-  session.defaultSession.setPermissionRequestHandler((_webContents, permission, callback, details) => {
-    if (permission === 'media' && details?.mediaTypes?.includes('audio')) {
-      callback(true)
+// Microphone capture for the voice composer. The renderer drives mic access
+// through getUserMedia, which Chromium gates behind these two session hooks.
+//
+// The naive `details.mediaTypes.includes('audio')` check works on macOS but
+// breaks on Windows: Chromium frequently fires the mic permission request with
+// an empty/undefined `mediaTypes`, so the strict check denies it and
+// getUserMedia throws NotAllowedError ("Microphone permission was denied").
+// We therefore treat an audio-capture request as allowed whenever it's the
+// 'media'/'audioCapture' permission AND mediaTypes either includes 'audio' OR
+// is empty/absent (the Windows case). Video is still denied.
+function isAudioCapturePermission(permission, details) {
+  if (permission === 'audioCapture') {
+    return true
+  }
+  if (permission !== 'media') {
+    return false
+  }
+  const mediaTypes = details?.mediaTypes
+  if (!Array.isArray(mediaTypes) || mediaTypes.length === 0) {
+    // Windows: mediaTypes is often empty for a mic request. Don't deny on
+    // missing metadata. (A video request would carry mediaTypes:['video'].)
+    return true
+  }
+  return mediaTypes.includes('audio') && !mediaTypes.includes('video')
+}
 
-      return
+function installMediaPermissions() {
+  // Async request handler: the prompt-style path (most platforms).
+  session.defaultSession.setPermissionRequestHandler((_webContents, permission, callback, details) => {
+    callback(isAudioCapturePermission(permission, details))
+  })
+
+  // Synchronous check handler: Chromium consults this for getUserMedia on
+  // Windows in addition to (or instead of) the request handler. Without it,
+  // the check defaults to false and the mic is denied before the request
+  // handler ever runs.
+  session.defaultSession.setPermissionCheckHandler((_webContents, permission, _origin, details) => {
+    if (permission === 'media' || permission === 'audioCapture') {
+      // details.mediaType is a single string here (not the mediaTypes array).
+      const mediaType = details?.mediaType
+      if (mediaType === 'video') {
+        return false
+      }
+
+      return true
     }
 
-    callback(false)
+    return false
   })
 }
 
